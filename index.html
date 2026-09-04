@@ -21,27 +21,35 @@
     justify-content: center;
   }
   #wrap {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     transform-origin: center center;
   }
-  #time {
+  #hour, #minute {
     font-family: "Courier New", Consolas, monospace;
     font-weight: bold;
-    font-size: 22vw;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
+    font-size: 13vw;
+    line-height: 0.95;
   }
   #colon {
-    display: inline-block;
+    font-family: "Courier New", Consolas, monospace;
+    font-weight: bold;
+    font-size: 5vw;
+    line-height: 0.5;
+    margin: 0.5vh 0;
   }
-  #colon.dim {
-    opacity: 0.15;
+  #ampm {
+    font-family: "Courier New", Consolas, monospace;
+    font-weight: bold;
+    font-size: 5vw;
+    letter-spacing: 0.2em;
+    margin-top: 1vh;
   }
   #date {
     font-family: "Courier New", Consolas, monospace;
     font-weight: bold;
-    font-size: 4.5vw;
+    font-size: 2.7vw;
     letter-spacing: 0.15em;
     margin-top: 2vh;
     white-space: nowrap;
@@ -55,7 +63,10 @@
 <body>
 <div id="stage">
   <div id="wrap">
-    <div id="time">--<span id="colon">:</span>--</div>
+    <div id="hour">--</div>
+    <div id="colon">:</div>
+    <div id="minute">--</div>
+    <div id="ampm">--</div>
     <div id="date">----</div>
   </div>
 </div>
@@ -67,10 +78,10 @@
     return m ? decodeURIComponent(m[1]) : fallback;
   }
 
-  var format = param("format", "24");   // "24" or "12"
+  var format = param("format", "12");   // "12" or "24"
   var theme = param("theme", "light");  // "light" or "dark"
   var rotate = param("r", "0");         // degrees: 0, 90, 180, 270
-  var fs = param("fs", "");             // override time font-size, e.g. "18vw" or "220px"
+  var fs = param("fs", "");             // override hour/minute font-size, e.g. "16vw"
   var dfs = param("dfs", "");           // override date font-size
   var showDate = param("date", "1") !== "0";
   var lang = param("lang", "en");       // "en" or "iso"
@@ -84,38 +95,41 @@
     wrap.style.transform = "rotate(" + rotate + "deg)";
   }
 
-  var timeEl = document.getElementById("time");
+  var hourEl = document.getElementById("hour");
+  var minuteEl = document.getElementById("minute");
+  var ampmEl = document.getElementById("ampm");
   var dateEl = document.getElementById("date");
-  var colonEl = document.getElementById("colon");
 
-  if (fs) timeEl.style.fontSize = fs;
+  if (fs) {
+    hourEl.style.fontSize = fs;
+    minuteEl.style.fontSize = fs;
+  }
   if (dfs) dateEl.style.fontSize = dfs;
   if (!showDate) dateEl.style.display = "none";
+  if (format !== "12") ampmEl.style.display = "none";
 
   var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   function pad2(n) {
-    n = n < 10 ? "0" + n : "" + n;
-    return n;
+    return n < 10 ? "0" + n : "" + n;
   }
 
   function render() {
     var now = new Date();
     var hours = now.getHours();
     var minutes = now.getMinutes();
-    var suffix = "";
 
     if (format === "12") {
-      suffix = hours >= 12 ? " PM" : " AM";
+      ampmEl.textContent = hours >= 12 ? "PM" : "AM";
       hours = hours % 12;
       if (hours === 0) hours = 12;
+      hourEl.textContent = "" + hours;
+    } else {
+      hourEl.textContent = pad2(hours);
     }
 
-    timeEl.childNodes[0].nodeValue = pad2(hours);
-    timeEl.childNodes[2].nodeValue = pad2(minutes) + suffix;
-
-    colonEl.className = (now.getSeconds() % 2 === 0) ? "" : "dim";
+    minuteEl.textContent = pad2(minutes);
 
     if (showDate) {
       var dateStr;
@@ -124,7 +138,7 @@
       } else {
         dateStr = DAY_NAMES[now.getDay()] + "  " + MONTH_NAMES[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
       }
-      dateEl.firstChild.nodeValue = dateStr;
+      dateEl.textContent = dateStr;
     }
   }
 
