@@ -50,6 +50,19 @@ function formatDate(date, fmt) {
   return fmt;
 }
 
+var WEEKDAYS_EN = ["SUN", "MON", "TUES", "WED", "THUR", "FRI", "SAT"];
+var ZODIAC_EN = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"];
+
+function pad2(n) {
+  return n < 10 ? "0" + n : "" + n;
+}
+
+function zodiacEn(lunarYear) {
+  var idx = (lunarYear - 4) % 12;
+  if (idx < 0) idx += 12;
+  return ZODIAC_EN[idx];
+}
+
 function render() {
   // Force China (UTC+8) time display, same as the original this page is
   // based on -- some Kindle units show wrong local time otherwise.
@@ -65,15 +78,12 @@ function render() {
     date.getUTCDate()
   );
 
-  var dateText =
-    formatDate(date, "yyyy.M.d") +
-    " " +
-    (urlQuery.l == "en"
-      ? ["SUN", "MON", "TUES", "WED", "THUR", "FRI", "SAT"][date.getDay()]
-      : "星期" + ["日", "一", "二", "三", "四", "五", "六"][date.getDay()]);
+  var dateText = formatDate(date, "yyyy.M.d") + " " + WEEKDAYS_EN[date.getDay()];
 
-  var timeText = date.getHours() + ":" + date.getMinutes();
-  var cnDateText = lunar.IMonthCn + lunar.IDayCn + " " + lunar.Animal + "年";
+  var timeText = pad2(date.getHours()) + ":" + pad2(date.getMinutes());
+  var cnDateText =
+    "Lunar " + lunar.lMonth + "/" + lunar.lDay + (lunar.isLeap ? " (Leap)" : "") +
+    ", Year of the " + zodiacEn(lunar.lYear);
 
   if (domDate.innerHTML != dateText) domDate.innerHTML = dateText;
   if (domTime.innerHTML != timeText) domTime.innerHTML = timeText;
@@ -85,7 +95,6 @@ var config = {
   fontSize: +(urlQuery.fs || 10.5), // 7 * 1.5 -- 50% bigger than the original base size
   // Default to a 90deg clockwise turn; override with ?r=0 / 180 / 270.
   rotate: urlQuery.r === undefined ? 90 : urlQuery.r,
-  lang: urlQuery.l,
 };
 
 domTime.style.fontSize = config.fontSize + "rem";
