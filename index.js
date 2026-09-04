@@ -82,7 +82,7 @@ function render() {
 
 var urlQuery = geturl(location.href);
 var config = {
-  fontSize: +(urlQuery.fs || 7),
+  fontSize: +(urlQuery.fs || 10.5), // 7 * 1.5 -- 50% bigger than the original base size
   // Default to a 90deg clockwise turn; override with ?r=0 / 180 / 270.
   rotate: urlQuery.r === undefined ? 90 : urlQuery.r,
   lang: urlQuery.l,
