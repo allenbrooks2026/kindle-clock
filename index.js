@@ -64,18 +64,15 @@ function zodiacEn(lunarYear) {
 }
 
 function render() {
-  // Force China (UTC+8) time display, same as the original this page is
-  // based on -- some Kindle units show wrong local time otherwise.
-  var time = new Date();
-  var len = time.getTime();
-  var offset = time.getTimezoneOffset() * 60000;
-  var utcTime = len + offset;
-  var date = new Date(utcTime + 3600000 * 8);
+  // Use the Kindle's own local time/timezone -- the original this page is
+  // based on force-displays China (UTC+8) time regardless of device
+  // timezone, which isn't what we want here.
+  var date = new Date();
 
   var lunar = calendar.solar2lunar(
-    date.getUTCFullYear(),
-    date.getUTCMonth() + 1,
-    date.getUTCDate()
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate()
   );
 
   var dateText = formatDate(date, "yyyy.M.d") + " " + WEEKDAYS_EN[date.getDay()];
@@ -100,10 +97,22 @@ var config = {
 domTime.style.fontSize = config.fontSize + "rem";
 domDate.style.fontSize = config.fontSize / 2.5 + "rem";
 domCnDate.style.fontSize = config.fontSize / 4 + "rem";
-domApp.style.cssText =
-  "-webkit-transform: rotate(" + (config.rotate || 0) + "deg) translate3d(-50%,-50%,0)";
+// Set both prefixed and unprefixed so this also rotates correctly when
+// previewed in a non-WebKit desktop browser, not just on the Kindle.
+domApp.style.webkitTransform = "rotate(" + (config.rotate || 0) + "deg)";
+domApp.style.transform = "rotate(" + (config.rotate || 0) + "deg)";
+
+// Re-render on each real minute boundary instead of every second -- the
+// displayed text only changes once a minute anyway (see the
+// innerHTML-diff checks above), so this cuts CPU wake-ups roughly 60x,
+// which matters for battery life when the browser is left open 24/7.
+function scheduleNextRender() {
+  var msUntilNextMinute = 60000 - (new Date().getSeconds() * 1000 + new Date().getMilliseconds());
+  setTimeout(function () {
+    render();
+    scheduleNextRender();
+  }, msUntilNextMinute);
+}
 
 render();
-setInterval(function () {
-  render();
-}, 1000);
+scheduleNextRender();

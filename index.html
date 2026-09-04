@@ -17,22 +17,31 @@
       padding: 0;
     }
 
-    body {
-      height: 100vh;
+    html, body {
+      height: 100%;
       width: 100%;
-      text-align: center;
       overflow: hidden;
     }
 
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .app {
-      position: absolute;
-      top: 40%;
-      left: 50%;
-      -webkit-transform-origin: 0 0;
+      text-align: center;
+      /* Shift up 10% of the viewport height, same as before -- done as a
+         plain layout margin so it applies before rotation, regardless of
+         rotation angle. Centering itself is handled by the flex container
+         above rather than the old position:absolute + percentage-translate
+         trick, which is fragile on Kindle's old WebKit build. */
+      margin-top: -10vh;
+      transform-origin: center center;
     }
 
     .time {
-      font-family: TIME;
+      font-family: TIME, "Courier New", monospace;
       font-weight: 700;
       letter-spacing: -0.02em;
       margin: 1rem 0;
