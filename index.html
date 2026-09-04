@@ -1,149 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Kindle Clock</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #fff;
-    color: #000;
-  }
-  #stage {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    transform-origin: 0 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #wrap {
-    text-align: center;
-  }
-  #time {
-    font-family: "Courier New", Consolas, monospace;
-    font-weight: bold;
-    font-size: 9vw;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-  }
-  #date {
-    font-family: "Courier New", Consolas, monospace;
-    font-weight: bold;
-    font-size: 3vw;
-    letter-spacing: 0.15em;
-    margin-top: 2vh;
-    white-space: nowrap;
-  }
-  body.swap #time { font-size: 9vh; }
-  body.swap #date { font-size: 3vh; margin-top: 2vw; }
-  body.dark {
-    background: #000;
-    color: #fff;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clock For Kindle</title>
+  <style>
+    @font-face {
+      font-family: TIME;
+      src: url("clock-font.ttf") format("truetype");
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      height: 100vh;
+      width: 100%;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .app {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -webkit-transform-origin: 0 0;
+    }
+
+    .time {
+      font-family: TIME;
+      margin: 1rem 0;
+    }
+
+    .date {
+      white-space: nowrap;
+    }
+
+    .cn-date {}
+  </style>
 </head>
+
 <body>
-<div id="stage">
-  <div id="wrap">
-    <div id="time">--:-- --</div>
-    <div id="date">----</div>
+  <div class="app">
+    <div class="date"></div>
+    <div class="time"></div>
+    <div class="cn-date"></div>
   </div>
-</div>
 
-<script>
-(function () {
-  function param(name, fallback) {
-    var m = new RegExp("[?&]" + name + "=([^&]+)").exec(window.location.search);
-    return m ? decodeURIComponent(m[1]) : fallback;
-  }
-
-  var format = param("format", "12");    // "12" or "24"
-  var theme = param("theme", "light");   // "light" or "dark"
-  var rotate = parseInt(param("r", "90"), 10); // 0, 90, 180, 270 (90 = quarter turn right)
-  var fs = param("fs", "");              // override time font-size, e.g. "10vh"
-  var dfs = param("dfs", "");            // override date font-size
-  var showDate = param("date", "1") !== "0";
-  var lang = param("lang", "en");        // "en" or "iso"
-
-  if (theme === "dark") document.body.className += " dark";
-
-  var stage = document.getElementById("stage");
-  rotate = ((rotate % 360) + 360) % 360;
-
-  if (rotate === 90) {
-    stage.style.left = "100%";
-    stage.style.top = "0";
-    stage.style.width = "100vh";
-    stage.style.height = "100vw";
-    stage.style.transform = "rotate(90deg)";
-    document.body.className += " swap";
-  } else if (rotate === 180) {
-    stage.style.left = "100%";
-    stage.style.top = "100%";
-    stage.style.transform = "rotate(180deg)";
-  } else if (rotate === 270) {
-    stage.style.left = "0";
-    stage.style.top = "100%";
-    stage.style.width = "100vh";
-    stage.style.height = "100vw";
-    stage.style.transform = "rotate(270deg)";
-    document.body.className += " swap";
-  }
-
-  var timeEl = document.getElementById("time");
-  var dateEl = document.getElementById("date");
-
-  if (fs) timeEl.style.fontSize = fs;
-  if (dfs) dateEl.style.fontSize = dfs;
-  if (!showDate) dateEl.style.display = "none";
-
-  var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  var MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  function pad2(n) {
-    return n < 10 ? "0" + n : "" + n;
-  }
-
-  function render() {
-    var now = new Date();
-    var hours = now.getHours();
-    var minutes = pad2(now.getMinutes());
-    var timeStr;
-
-    if (format === "12") {
-      var ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12;
-      if (hours === 0) hours = 12;
-      timeStr = hours + ":" + minutes + " " + ampm;
-    } else {
-      timeStr = pad2(hours) + ":" + minutes;
-    }
-
-    timeEl.textContent = timeStr;
-
-    if (showDate) {
-      var dateStr;
-      if (lang === "iso") {
-        dateStr = now.getFullYear() + "-" + pad2(now.getMonth() + 1) + "-" + pad2(now.getDate());
-      } else {
-        dateStr = DAY_NAMES[now.getDay()] + "  " + MONTH_NAMES[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
-      }
-      dateEl.textContent = dateStr;
-    }
-  }
-
-  render();
-  setInterval(render, 1000);
-})();
-</script>
+  <script src="./calendar.min.js"></script>
+  <script src="./index.js"></script>
 </body>
+
 </html>
