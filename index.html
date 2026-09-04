@@ -14,46 +14,37 @@
     color: #000;
   }
   #stage {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
+    transform-origin: 0 0;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   #wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transform-origin: center center;
+    text-align: center;
   }
-  #hour, #minute {
+  #time {
     font-family: "Courier New", Consolas, monospace;
     font-weight: bold;
-    font-size: 13vw;
-    line-height: 0.95;
-  }
-  #colon {
-    font-family: "Courier New", Consolas, monospace;
-    font-weight: bold;
-    font-size: 5vw;
-    line-height: 0.5;
-    margin: 0.5vh 0;
-  }
-  #ampm {
-    font-family: "Courier New", Consolas, monospace;
-    font-weight: bold;
-    font-size: 5vw;
-    letter-spacing: 0.2em;
-    margin-top: 1vh;
+    font-size: 9vw;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
   }
   #date {
     font-family: "Courier New", Consolas, monospace;
     font-weight: bold;
-    font-size: 2.7vw;
+    font-size: 3vw;
     letter-spacing: 0.15em;
     margin-top: 2vh;
     white-space: nowrap;
   }
+  body.swap #time { font-size: 9vh; }
+  body.swap #date { font-size: 3vh; margin-top: 2vw; }
   body.dark {
     background: #000;
     color: #fff;
@@ -63,10 +54,7 @@
 <body>
 <div id="stage">
   <div id="wrap">
-    <div id="hour">--</div>
-    <div id="colon">:</div>
-    <div id="minute">--</div>
-    <div id="ampm">--</div>
+    <div id="time">--:-- --</div>
     <div id="date">----</div>
   </div>
 </div>
@@ -78,35 +66,45 @@
     return m ? decodeURIComponent(m[1]) : fallback;
   }
 
-  var format = param("format", "12");   // "12" or "24"
-  var theme = param("theme", "light");  // "light" or "dark"
-  var rotate = param("r", "0");         // degrees: 0, 90, 180, 270
-  var fs = param("fs", "");             // override hour/minute font-size, e.g. "16vw"
-  var dfs = param("dfs", "");           // override date font-size
+  var format = param("format", "12");    // "12" or "24"
+  var theme = param("theme", "light");   // "light" or "dark"
+  var rotate = parseInt(param("r", "90"), 10); // 0, 90, 180, 270 (90 = quarter turn right)
+  var fs = param("fs", "");              // override time font-size, e.g. "10vh"
+  var dfs = param("dfs", "");            // override date font-size
   var showDate = param("date", "1") !== "0";
-  var lang = param("lang", "en");       // "en" or "iso"
+  var lang = param("lang", "en");        // "en" or "iso"
 
-  if (theme === "dark") {
-    document.body.className = "dark";
+  if (theme === "dark") document.body.className += " dark";
+
+  var stage = document.getElementById("stage");
+  rotate = ((rotate % 360) + 360) % 360;
+
+  if (rotate === 90) {
+    stage.style.left = "100%";
+    stage.style.top = "0";
+    stage.style.width = "100vh";
+    stage.style.height = "100vw";
+    stage.style.transform = "rotate(90deg)";
+    document.body.className += " swap";
+  } else if (rotate === 180) {
+    stage.style.left = "100%";
+    stage.style.top = "100%";
+    stage.style.transform = "rotate(180deg)";
+  } else if (rotate === 270) {
+    stage.style.left = "0";
+    stage.style.top = "100%";
+    stage.style.width = "100vh";
+    stage.style.height = "100vw";
+    stage.style.transform = "rotate(270deg)";
+    document.body.className += " swap";
   }
 
-  var wrap = document.getElementById("wrap");
-  if (rotate !== "0") {
-    wrap.style.transform = "rotate(" + rotate + "deg)";
-  }
-
-  var hourEl = document.getElementById("hour");
-  var minuteEl = document.getElementById("minute");
-  var ampmEl = document.getElementById("ampm");
+  var timeEl = document.getElementById("time");
   var dateEl = document.getElementById("date");
 
-  if (fs) {
-    hourEl.style.fontSize = fs;
-    minuteEl.style.fontSize = fs;
-  }
+  if (fs) timeEl.style.fontSize = fs;
   if (dfs) dateEl.style.fontSize = dfs;
   if (!showDate) dateEl.style.display = "none";
-  if (format !== "12") ampmEl.style.display = "none";
 
   var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -118,18 +116,19 @@
   function render() {
     var now = new Date();
     var hours = now.getHours();
-    var minutes = now.getMinutes();
+    var minutes = pad2(now.getMinutes());
+    var timeStr;
 
     if (format === "12") {
-      ampmEl.textContent = hours >= 12 ? "PM" : "AM";
+      var ampm = hours >= 12 ? "PM" : "AM";
       hours = hours % 12;
       if (hours === 0) hours = 12;
-      hourEl.textContent = "" + hours;
+      timeStr = hours + ":" + minutes + " " + ampm;
     } else {
-      hourEl.textContent = pad2(hours);
+      timeStr = pad2(hours) + ":" + minutes;
     }
 
-    minuteEl.textContent = pad2(minutes);
+    timeEl.textContent = timeStr;
 
     if (showDate) {
       var dateStr;
